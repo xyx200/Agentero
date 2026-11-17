@@ -341,6 +341,8 @@ export const commands = {
 	paperRefsParse: (args: PaperRefsParseArgs) => typedError<ApiResult<CiteSidecar_Serialize>, string>(__TAURI_INVOKE("paper_refs_parse", { args })),
 	/**  Read the existing reference sidecar; `None` when it has not been parsed yet. */
 	paperRefsList: (args: PaperRefsListArgs) => __TAURI_INVOKE<ApiResult<CiteSidecar_Serialize | null>>("paper_refs_list", { args }),
+	/**  Citation relationship graph from existing reference sidecars and the catalog. */
+	paperRefsGraph: (args: PaperRefsGraphArgs) => __TAURI_INVOKE<ApiResult<CiteGraphResponse>>("paper_refs_graph", { args }),
 	/**  Scan the whole library for new papers that cite it but are not imported yet. */
 	libraryCitingScan: (args: LibraryCitingScanArgs) => typedError<ApiResult<CitingScanResult_Serialize>, string>(__TAURI_INVOKE("library_citing_scan", { args })),
 	/**
@@ -2485,6 +2487,38 @@ export type Citation_Serialize = {
 	/**  `"resolved"` (has title) or `"unresolved"` (raw text only). */
 	status: string,
 };
+
+export type CiteGraphEdge = {
+	id: string,
+	source: string,
+	target: string,
+	/**  Citation display / raw key when available (e.g. `[12]`). */
+	targetRaw?: string,
+};
+
+export type CiteGraphNode = {
+	/**  Vault-relative paper path, or `stub:…` for unresolved citations. */
+	id: string,
+	label: string,
+	type: CiteGraphNodeType,
+	path?: string,
+	/**  Neighborhood role; absent in full-library mode. */
+	role?: CiteGraphRole,
+};
+
+/**  A library paper or an external reference. */
+export type CiteGraphNodeType = "paper" | "stub";
+
+export type CiteGraphResponse = {
+	nodes: CiteGraphNode[],
+	edges: CiteGraphEdge[],
+	/**  Normalized center paper path in neighborhood mode; null for full graph. */
+	center?: string | null,
+	depth: number,
+};
+
+/**  Role of a node relative to the center paper (neighborhood mode only). */
+export type CiteGraphRole = "center" | "reference" | "citedBy";
 
 export type CiteSidecar = CiteSidecar_Serialize | CiteSidecar_Deserialize;
 
@@ -4699,6 +4733,14 @@ export type PaperRecord_Serialize = {
 	zotero_last_synced?: string | null,
 	added_at: string,
 	updated_at: string,
+};
+
+export type PaperRefsGraphArgs = {
+	vaultPath: string,
+	/**  Paper folder (or file under it) for neighborhood mode; omit / empty = full library graph. */
+	center?: string | null,
+	/**  Direct citations only; values are clamped to 1. */
+	depth?: number | null,
 };
 
 export type PaperRefsListArgs = {

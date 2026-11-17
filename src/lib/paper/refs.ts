@@ -4,7 +4,12 @@
  * the rebuildable `{paper}/source/agentero-cite.json`; see docs/backend/api.md
  * `paper_refs_parse` / `paper_refs_list`.
  */
-import { commands } from "@/lib/core/bindings";
+import {
+	commands,
+	type CiteGraphNode as GraphNode,
+	type CiteGraphResponse as GraphResponse,
+	type CiteGraphRole as GraphRole,
+} from "@/lib/core/bindings";
 import { callApi, callApiResult } from "@/lib/core/ipc";
 
 export type CitationMeta = {
@@ -56,6 +61,27 @@ export async function paperRefsList(
 		{ fallback: "paper_refs_list failed" },
 	)) as CiteSidecar | null;
 	return sidecar ?? null;
+}
+
+export type CiteGraphNode = GraphNode;
+export type CiteGraphResponse = GraphResponse;
+export type CiteGraphRole = GraphRole;
+
+/** Read local reference relationships without parsing or making network requests. */
+export async function paperRefsGraph(
+	vaultPath: string | null,
+	opts?: { center?: string | null; depth?: number | null },
+): Promise<CiteGraphResponse> {
+	if (!vaultPath) return { nodes: [], edges: [], center: null, depth: 1 };
+	return callApi(
+		() =>
+			commands.paperRefsGraph({
+				vaultPath,
+				center: opts?.center ?? null,
+				depth: opts?.depth ?? null,
+			}),
+		{ fallback: "paper_refs_graph failed" },
+	);
 }
 
 /** Parse (or force-refresh) references for one paper and persist the sidecar. */

@@ -1,4 +1,20 @@
 {
+	"graph": {
+		"title": "引用图谱",
+		"loading": "正在加载引用图谱…",
+		"noEdges": "暂无引用连接。打开论文以解析参考文献，或入库更多相关论文。",
+		"modeAll": "切换到全库图谱",
+		"modeCenter": "切换到当前论文图谱",
+		"legend": {
+			"center": "本论文",
+			"reference": "本文引用 · 库内",
+			"citedBy": "引用本文 · 库内",
+			"external": "库外文献"
+		},
+		"failed": "引用图谱加载失败",
+		"refresh": "刷新图谱",
+		"fit": "适应视图"
+	},
 	"newTableLabel": "新建科研表格",
 	"newExperimentLabel": "新建实验记录",
 	"fileTree": {

@@ -4,6 +4,7 @@ import {
 	BookMarked,
 	Import,
 	Loader2,
+	Network,
 	RefreshCw,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +20,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CitationImportPopover } from "@/components/viewer/citation-import-menu";
+import { CitationGraphPanel } from "@/components/viewer/panels/citation-graph-panel";
 import {
 	PanelCard,
 	PanelCardActions,
@@ -38,14 +40,14 @@ import {
 	paperRefsParse,
 } from "@/lib/paper/refs";
 import { joinVaultPath } from "@/lib/vault/path";
-import { openPaper } from "@/lib/workspace/actions";
+import { openGraphPath, openPaper } from "@/lib/workspace/actions";
 
 type ReferencesPanelProps = {
 	vaultPath: string | null;
 	/** Vault-relative paper folder of the active document; null = not a paper. */
 	paperPath: string | null;
 	className?: string;
-	/** Hide the pane header and filter input for use inside a floating PDF panel. */
+	/** Hide the filter input for use inside a floating PDF panel. */
 	compact?: boolean;
 };
 
@@ -83,11 +85,13 @@ export function ReferencesPanel({
 	compact,
 }: ReferencesPanelProps) {
 	const { t } = useTranslation("viewer");
+	const { t: sidebarT } = useTranslation("sidebar");
 	const { sidecar, loading, setSidecar } = usePaperRefsSidecar(
 		vaultPath,
 		paperPath,
 	);
 	const [parsing, setParsing] = useState(false);
+	const [showGraph, setShowGraph] = useState(false);
 	const [filter, setFilter] = useState("");
 	const paperPathRef = useRef(paperPath);
 	paperPathRef.current = paperPath;
@@ -222,10 +226,23 @@ export function ReferencesPanel({
 			className={cn("flex h-full min-h-0 flex-col overflow-hidden", className)}
 			aria-label={t("references.panelAria")}
 		>
-			{compact ? null : (
-				<PaneHeader
-					trailing={
-						paperPath && sidecar ? (
+			<PaneHeader
+				trailing={
+					<div className="flex items-center gap-1">
+						{paperPath ? (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-xs"
+								aria-label={sidebarT("graph.title")}
+								title={sidebarT("graph.title")}
+								aria-pressed={showGraph}
+								onClick={() => setShowGraph((value) => !value)}
+							>
+								<Network className="size-3.5" aria-hidden />
+							</Button>
+						) : null}
+						{paperPath && sidecar ? (
 							<Button
 								type="button"
 								variant="ghost"
@@ -239,15 +256,26 @@ export function ReferencesPanel({
 									className={cn("size-3.5", parsing && "animate-spin")}
 								/>
 							</Button>
-						) : null
-					}
-				>
-					<BookMarked className="size-4 text-muted-foreground" aria-hidden />
-					<span className="font-medium text-sm">{t("references.title")}</span>
-				</PaneHeader>
-			)}
+						) : null}
+					</div>
+				}
+			>
+				<BookMarked className="size-4 text-muted-foreground" aria-hidden />
+				<span className="font-medium text-sm">{t("references.title")}</span>
+			</PaneHeader>
 
-			{listBody}
+			{showGraph && paperPath ? (
+				<CitationGraphPanel
+					vaultPath={vaultPath}
+					selectedPath={paperPath}
+					onOpenPath={openGraphPath}
+					revision={sidecar}
+					embedded
+					className="flex-1"
+				/>
+			) : (
+				listBody
+			)}
 		</section>
 	);
 }

@@ -9,6 +9,7 @@
 pub mod bbl;
 pub mod bib;
 pub mod citing;
+pub mod graph;
 pub mod latex;
 
 use crate::error::AppError;
