@@ -98,7 +98,7 @@ dependencies = [
 
 [[package]]
 name = "agentero"
-version = "0.16.2"
+version = "0.16.2+highlight.1"
 dependencies = [
  "agent-client-protocol",
  "agentero-core",

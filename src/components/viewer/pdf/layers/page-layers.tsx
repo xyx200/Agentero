@@ -44,6 +44,7 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { PDF_CHROME_CHIP } from "@/components/viewer/pdf/chrome/pdf-chrome-surface";
 import {
@@ -1373,7 +1374,7 @@ export const PdfPageLayers = memo(function PdfPageLayers({
 					rotation={pageRotation}
 					widthPx={frameWidth}
 					heightPx={frameHeight}
-					className="z-[5]"
+					className={cn("z-[5]", !pdfDark && "mix-blend-multiply")}
 				>
 					{/* Unmount text selection while framing a visual region. */}
 					{mode.regionSelecting ? null : (
@@ -1407,11 +1408,13 @@ export const PdfPageLayers = memo(function PdfPageLayers({
 						<div
 							className={cn(
 								// Above translation paper (z-3), under glyphs (z-6), same
-								// slot as the selection tint. The highlight menu lifts the
-								// layer so it stays clickable over the glyphs.
+								// slot as the selection tint. Blend the whole stacking context
+								// with the page so highlights cannot wash out black glyphs.
+								// The menu is portalled outside this paint group below.
 								// Empty areas pass through to citation hits (z-2). Annotation
 								// controls opt back into pointers on their own elements.
-								"pointer-events-none absolute inset-0 z-[5] has-[[data-pdf-chrome]]:z-[7]",
+								"pointer-events-none absolute inset-0 z-[5]",
+								!pdfDark && "mix-blend-multiply",
 								pdfDark && PDF_ANNOTATION_DARK_CLASS,
 							)}
 						>
@@ -1419,15 +1422,28 @@ export const PdfPageLayers = memo(function PdfPageLayers({
 								documentId={docId}
 								pageIndex={pageIndex}
 								annotationRenderers={annotationRenderers}
-								selectionMenu={(menuProps) => (
-									<HighlightAnnotationMenu
-										{...menuProps}
-										docId={docId}
-										onEdit={handlers.onEditHighlightAnnotation}
-										onDelete={handlers.onDeleteHighlightAnnotation}
-										onChangeColor={handlers.onChangeHighlightColor}
-									/>
-								)}
+								selectionMenu={(menuProps) =>
+									menuProps.selected && pageShellRef.current
+										? createPortal(
+												<div className="pointer-events-none absolute inset-0 z-[7]">
+													<UnrotatedPageFrame
+														rotation={pageRotation}
+														widthPx={frameWidth}
+														heightPx={frameHeight}
+													>
+														<HighlightAnnotationMenu
+															{...menuProps}
+															docId={docId}
+															onEdit={handlers.onEditHighlightAnnotation}
+															onDelete={handlers.onDeleteHighlightAnnotation}
+															onChangeColor={handlers.onChangeHighlightColor}
+														/>
+													</UnrotatedPageFrame>
+												</div>,
+												pageShellRef.current,
+											)
+										: null
+								}
 							/>
 						</div>
 					) : null}
