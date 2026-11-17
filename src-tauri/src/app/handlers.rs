@@ -117,6 +117,7 @@ macro_rules! common_commands {
             crate::features::paper::zotero::commands::paper_import,
             crate::features::paper::analyze::refs::commands::paper_refs_parse,
             crate::features::paper::analyze::refs::commands::paper_refs_list,
+            crate::features::paper::analyze::refs::commands::paper_refs_graph,
             crate::features::paper::analyze::refs::commands::library_citing_scan,
             crate::features::paper::discovery::coolpapers::commands::paper_coolpapers_notes,
             crate::features::paper::discovery::coolpapers::commands::paper_coolpapers_import,

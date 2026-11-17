@@ -1184,6 +1184,17 @@ Updater 模块与命令注册均排除 Android / iOS，与 Cargo 的 updater 插
 - **参数**（`args`）：`{ vaultPath: string; path: string }`
 - **返回**：`{ ok: true; data: CiteSidecar | null }`
 
+#### `paper_refs_graph`
+
+从 catalog 与已有参考文献 sidecar 构建论文引用图，仅读取本地数据。实现位于 `crates/agentero-core/src/features/paper/analyze/refs/graph.rs`；Host 在阻塞工作线程读取文件。
+
+- **参数**（`args`）：`{ vaultPath: string; center?: string | null; depth?: number | null }`。`center` 接受 Vault 相对论文目录或其下文件；省略、空白或 `null` 返回全库图。当前仅支持一跳关系，`depth` 始终归一为 `1`。
+- **返回**：`{ ok: true; data: { nodes: CiteGraphNode[]; edges: CiteGraphEdge[]; center?: string; depth: number } }`。
+- 节点为 `{ id, label, type: "paper" | "stub", path?, role?: "center" | "reference" | "citedBy" }`；边为 `{ id, source, target, targetRaw? }`，方向为引用方 → 被引用方，同向重复边合并。
+- 当前论文图包含中心节点、库内参考文献、库外参考文献占位节点，以及库内引用中心论文的节点。全库图只保留参与引用边的库内论文。
+- 查询按当前 catalog 补匹配 DOI、arXiv ID、归一化标题，不重写 sidecar。缺失或不可读的 sidecar 不贡献边；未知中心、非法中心路径或 catalog 读取失败返回错误。
+- 不执行解析、在线引用发现或 Markdown 双链查询。前端入口和交互见 [论文引用图谱](../frontend/citation-graph.md)。
+
 #### `library_citing_scan`
 
 **反向**引用发现：扫描全库，找出引用了库内论文、但**还没入库**的新论文。与本组其余命令方向相反，且**只能来自在线 API**（本地 TeX/`.bbl` 不含反向引用）。数据源为 Semantic Scholar；OpenAlex 的引用图几乎不含 arXiv 预印本之间的边，不可用。详见 [`citation-parsing.md`](citation-parsing.md) §7。

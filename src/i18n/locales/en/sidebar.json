@@ -1,4 +1,20 @@
 {
+	"graph": {
+		"title": "Citation graph",
+		"loading": "Loading citation graph…",
+		"noEdges": "No citation links yet. Open a paper to parse references, or import more library papers.",
+		"modeAll": "Switch to full library graph",
+		"modeCenter": "Switch to current paper graph",
+		"legend": {
+			"center": "This paper",
+			"reference": "Cited · in library",
+			"citedBy": "Citing · in library",
+			"external": "Not in library"
+		},
+		"failed": "Could not load citation graph",
+		"refresh": "Refresh graph",
+		"fit": "Fit graph"
+	},
 	"newTableLabel": "New research table",
 	"newExperimentLabel": "New experiment",
 	"fileTree": {

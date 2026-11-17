@@ -1,4 +1,4 @@
-//! `paper_refs_parse` / `paper_refs_list` / `library_citing_scan` — reference
+//! `paper_refs_parse` / `paper_refs_list` / `paper_refs_graph` / `library_citing_scan` — reference
 //! commands.
 
 use crate::app::command_util::{try_vault, try_vault_ok};
@@ -20,6 +20,18 @@ pub struct PaperRefsParseArgs {
 pub struct PaperRefsListArgs {
     pub vault_path: String,
     pub path: String,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct PaperRefsGraphArgs {
+    pub vault_path: String,
+    /// Paper folder (or file under it) for neighborhood mode; omit / empty = full library graph.
+    #[serde(default)]
+    pub center: Option<String>,
+    /// Direct citations only; values are clamped to 1.
+    #[serde(default)]
+    pub depth: Option<u32>,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]
@@ -75,6 +87,23 @@ pub async fn paper_refs_list(args: PaperRefsListArgs) -> ApiResult<Option<super:
         };
         let sidecar_path = vault.join(rel).join("source").join(super::SIDECAR_FILE);
         op.finish_result(Ok(super::read_sidecar(&sidecar_path)))
+    })
+    .await
+}
+
+/// Citation relationship graph from existing reference sidecars and the catalog.
+#[tauri::command]
+#[specta::specta]
+pub async fn paper_refs_graph(args: PaperRefsGraphArgs) -> ApiResult<super::graph::CiteGraphResponse> {
+    crate::core::blocking::run_blocking(move || {
+        let op = OpTimer::start("paper_refs_graph");
+        let vault = try_vault!(&args.vault_path, op);
+        let center = args
+            .center
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+        op.finish_result(super::graph::build_citation_graph(&vault, center, args.depth))
     })
     .await
 }
