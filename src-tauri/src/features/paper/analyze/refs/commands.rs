@@ -94,7 +94,9 @@ pub async fn paper_refs_list(args: PaperRefsListArgs) -> ApiResult<Option<super:
 /// Citation relationship graph from existing reference sidecars and the catalog.
 #[tauri::command]
 #[specta::specta]
-pub async fn paper_refs_graph(args: PaperRefsGraphArgs) -> ApiResult<super::graph::CiteGraphResponse> {
+pub async fn paper_refs_graph(
+    args: PaperRefsGraphArgs,
+) -> ApiResult<super::graph::CiteGraphResponse> {
     crate::core::blocking::run_blocking(move || {
         let op = OpTimer::start("paper_refs_graph");
         let vault = try_vault!(&args.vault_path, op);
@@ -103,7 +105,9 @@ pub async fn paper_refs_graph(args: PaperRefsGraphArgs) -> ApiResult<super::grap
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty());
-        op.finish_result(super::graph::build_citation_graph(&vault, center, args.depth))
+        op.finish_result(super::graph::build_citation_graph(
+            &vault, center, args.depth,
+        ))
     })
     .await
 }

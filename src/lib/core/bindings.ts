@@ -342,7 +342,7 @@ export const commands = {
 	/**  Read the existing reference sidecar; `None` when it has not been parsed yet. */
 	paperRefsList: (args: PaperRefsListArgs) => __TAURI_INVOKE<ApiResult<CiteSidecar_Serialize | null>>("paper_refs_list", { args }),
 	/**  Citation relationship graph from existing reference sidecars and the catalog. */
-	paperRefsGraph: (args: PaperRefsGraphArgs) => __TAURI_INVOKE<ApiResult<CiteGraphResponse>>("paper_refs_graph", { args }),
+	paperRefsGraph: (args: PaperRefsGraphArgs) => __TAURI_INVOKE<ApiResult<CiteGraphResponse_Serialize>>("paper_refs_graph", { args }),
 	/**  Scan the whole library for new papers that cite it but are not imported yet. */
 	libraryCitingScan: (args: LibraryCitingScanArgs) => typedError<ApiResult<CitingScanResult_Serialize>, string>(__TAURI_INVOKE("library_citing_scan", { args })),
 	/**
@@ -2488,37 +2488,75 @@ export type Citation_Serialize = {
 	status: string,
 };
 
-export type CiteGraphEdge = {
+export type CiteGraphEdge = CiteGraphEdge_Serialize | CiteGraphEdge_Deserialize;
+
+export type CiteGraphEdge_Deserialize = {
 	id: string,
 	source: string,
 	target: string,
 	/**  Citation display / raw key when available (e.g. `[12]`). */
-	targetRaw?: string,
+	targetRaw?: string | null,
 };
 
-export type CiteGraphNode = {
-	/**  Vault-relative paper path, or `stub:…` for unresolved citations. */
+export type CiteGraphEdge_Serialize = {
 	id: string,
-	label: string,
-	type: CiteGraphNodeType,
-	path?: string,
-	/**  Neighborhood role; absent in full-library mode. */
-	role?: CiteGraphRole,
+	source: string,
+	target: string,
+	/**  Citation display / raw key when available (e.g. `[12]`). */
+	targetRaw?: string | null,
 };
+
+export type CiteGraphNode = CiteGraphNode_Serialize | CiteGraphNode_Deserialize;
 
 /**  A library paper or an external reference. */
 export type CiteGraphNodeType = "paper" | "stub";
 
-export type CiteGraphResponse = {
-	nodes: CiteGraphNode[],
-	edges: CiteGraphEdge[],
+export type CiteGraphNode_Deserialize = {
+	/**  Vault-relative paper path, or `stub:…` for unresolved citations. */
+	id: string,
+	label: string,
+	type: CiteGraphNodeType,
+	path?: string | null,
+	/**  Neighborhood role; absent in full-library mode. */
+	role?: CiteGraphRole | null,
+};
+
+export type CiteGraphNode_Serialize = {
+	/**  Vault-relative paper path, or `stub:…` for unresolved citations. */
+	id: string,
+	label: string,
+	type: CiteGraphNodeType,
+	path?: string | null,
+	/**  Neighborhood role; absent in full-library mode. */
+	role?: CiteGraphRole | null,
+};
+
+export type CiteGraphResponse = CiteGraphResponse_Serialize | CiteGraphResponse_Deserialize;
+
+export type CiteGraphResponse_Deserialize = {
+	nodes: CiteGraphNode_Deserialize[],
+	edges: CiteGraphEdge_Deserialize[],
+	/**  Normalized center paper path in neighborhood mode; null for full graph. */
+	center?: string | null,
+	depth: number,
+};
+
+export type CiteGraphResponse_Serialize = {
+	nodes: CiteGraphNode_Serialize[],
+	edges: CiteGraphEdge_Serialize[],
 	/**  Normalized center paper path in neighborhood mode; null for full graph. */
 	center?: string | null,
 	depth: number,
 };
 
 /**  Role of a node relative to the center paper (neighborhood mode only). */
-export type CiteGraphRole = "center" | "reference" | "citedBy";
+export type CiteGraphRole = 
+/**  The paper the neighborhood is built around. */
+"center" | 
+/**  Cited by the center paper. */
+"reference" | 
+/**  Library paper that cites the center paper. */
+"citedBy";
 
 export type CiteSidecar = CiteSidecar_Serialize | CiteSidecar_Deserialize;
 

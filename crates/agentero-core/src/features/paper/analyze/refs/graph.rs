@@ -216,9 +216,11 @@ fn build_neighborhood(
                 .clone()
                 .or_else(|| cite.raw_key.clone())
                 .or_else(|| cite.metadata.title.clone());
-            if cite.local_match.as_ref().is_some_and(|m| {
-                m.paper_path.replace('\\', "/").trim_end_matches('/') == center
-            }) {
+            if cite
+                .local_match
+                .as_ref()
+                .is_some_and(|m| m.paper_path.replace('\\', "/").trim_end_matches('/') == center)
+            {
                 continue;
             }
             let matched = cite.local_match.as_ref().and_then(|m| {
